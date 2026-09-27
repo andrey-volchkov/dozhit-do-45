@@ -31,6 +31,7 @@ function swap(el) {
   old.forEach((o) => { o.classList.remove('on'); setTimeout(() => o.remove(), 1700); });
 }
 export async function showImage(id, caption = '') {
+  stage.classList.remove('cardmode');
   if (!id || id === 'none') { shotId = null; swap(document.createElement('div')); return; }
   if (id === shotId) return;
   shotId = id;
@@ -48,57 +49,75 @@ export async function showImage(id, caption = '') {
 }
 
 // ---------- карточка 1905 года ----------
-// Базовый кадр ch01_01_group (или нарисованная замена) + маски из img/masks.json.
+// Два базовых кадра: ch01_01_group (без Сеньки) и ch01_01_group_senka (Сенька с краю, Лёвка отдельно на другом).
+// Смаз, бант и бледнеющие фигуры — маски из img/masks.json, доли кадра [x, y, w, h].
 let masks = null;
 const DEFAULT_MASKS = {
-  senka: [0.02, 0.12, 0.22, 0.85], mitya: [0.24, 0.2, 0.17, 0.76], levka: [0.41, 0.2, 0.17, 0.76],
-  varya: [0.58, 0.42, 0.14, 0.55], ribbon: [0.61, 0.6, 0.08, 0.1], asya: [0.73, 0.24, 0.22, 0.72],
+  ch01_01_group: { levka: [0.05, 0.2, 0.2, 0.76], mitya: [0.27, 0.2, 0.2, 0.76], asya: [0.5, 0.23, 0.21, 0.73], varya: [0.74, 0.42, 0.17, 0.54], ribbon: [0.775, 0.6, 0.09, 0.09] },
+  ch01_01_group_senka: { senka: [0.01, 0.12, 0.18, 0.85], mitya: [0.2, 0.2, 0.16, 0.76], asya: [0.37, 0.23, 0.17, 0.73], varya: [0.55, 0.42, 0.13, 0.54], ribbon: [0.58, 0.6, 0.07, 0.09], levka: [0.8, 0.2, 0.17, 0.76] },
 };
-function drawStandIn(w, h) {
+const LIGHT = { asya: true }; // белое платье
+function drawStandIn(w, h, M) {
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
-  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#9c8b6b'); bg.addColorStop(1, '#6a5a41'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
-  g.strokeStyle = 'rgba(235,222,195,.35)'; g.lineWidth = w * 0.004; // нарисованная балюстрада
-  g.strokeRect(w * 0.04, h * 0.5, w * 0.92, h * 0.02); g.strokeRect(w * 0.04, h * 0.7, w * 0.92, h * 0.015);
-  for (let x = 0.06; x < 0.95; x += 0.045) { g.beginPath(); g.ellipse(w * x, h * 0.61, w * 0.012, h * 0.08, 0, 0, 7); g.stroke(); }
-  g.beginPath(); g.ellipse(w * 0.5, h * 0.44, w * 0.05, h * 0.05, 0, 0, 7); g.stroke();
-  g.fillStyle = '#3f3426'; g.fillRect(0, h * 0.86, w, h * 0.14); // ковёр
-  const fig = (cx, top, bw, tone) => { g.fillStyle = tone; g.beginPath(); g.ellipse(w * cx, h * (top + 0.05), w * bw * 0.33, h * 0.052, 0, 0, 7); g.fill();
-    g.beginPath(); g.moveTo(w * (cx - bw * 0.35), h * (top + 0.1)); g.lineTo(w * (cx + bw * 0.35), h * (top + 0.1)); g.lineTo(w * (cx + bw * 0.5), h * 0.95); g.lineTo(w * (cx - bw * 0.5), h * 0.95); g.fill(); };
-  fig(0.13, 0.14, 0.17, '#241d15'); fig(0.325, 0.24, 0.13, '#2b2319'); fig(0.495, 0.24, 0.13, '#2b2319'); fig(0.65, 0.45, 0.1, '#2e251a'); fig(0.84, 0.29, 0.15, '#cfc3a8');
-  g.fillStyle = '#6d6252'; g.fillRect(w * 0.625, h * 0.63, w * 0.05, h * 0.06); // бант
+  const bg = g.createRadialGradient(w * 0.5, h * 0.35, w * 0.1, w * 0.5, h * 0.5, w * 0.9);
+  bg.addColorStop(0, '#a8977a'); bg.addColorStop(1, '#5c4d37'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(236,224,198,.22)'; g.lineWidth = w * 0.004; // нарисованная балюстрада
+  g.strokeRect(w * 0.03, h * 0.47, w * 0.94, h * 0.018); g.strokeRect(w * 0.03, h * 0.66, w * 0.94, h * 0.014);
+  for (let x = 0.05; x < 0.96; x += 0.042) { g.beginPath(); g.ellipse(w * x, h * 0.57, w * 0.011, h * 0.075, 0, 0, 7); g.stroke(); }
+  g.beginPath(); g.ellipse(w * 0.5, h * 0.41, w * 0.045, h * 0.045, 0, 0, 7); g.stroke();
+  g.fillStyle = 'rgba(40,32,22,.55)'; g.fillRect(0, h * 0.88, w, h * 0.12); // ковёр
+  const f = document.createElement('canvas'); f.width = w; f.height = h; const q = f.getContext('2d');
+  for (const [who, r] of Object.entries(M)) { // мягкие силуэты: голова, плечи, корпус
+    if (who === 'ribbon') continue;
+    const x = r[0] * w, y = r[1] * h, bw = r[2] * w, bh = r[3] * h, cx = x + bw / 2, L = LIGHT[who];
+    q.fillStyle = L ? 'rgba(232,222,200,.92)' : 'rgba(34,27,19,.9)';
+    q.beginPath(); q.ellipse(cx, y + bh * 0.07, bw * 0.2, bh * 0.065, 0, 0, 7); q.fill();
+    q.beginPath(); q.moveTo(cx - bw * 0.1, y + bh * 0.13);
+    q.quadraticCurveTo(cx - bw * 0.42, y + bh * 0.15, cx - bw * 0.4, y + bh * 0.3);
+    q.lineTo(cx - bw * (L ? 0.48 : 0.34), y + bh * (L ? 0.78 : 0.62)); q.lineTo(cx - bw * 0.2, y + bh); q.lineTo(cx + bw * 0.2, y + bh);
+    q.lineTo(cx + bw * (L ? 0.48 : 0.34), y + bh * (L ? 0.78 : 0.62)); q.lineTo(cx + bw * 0.4, y + bh * 0.3);
+    q.quadraticCurveTo(cx + bw * 0.42, y + bh * 0.15, cx + bw * 0.1, y + bh * 0.13); q.closePath(); q.fill();
+  }
+  if (M.ribbon) { const [x, y, bw, bh] = M.ribbon; q.fillStyle = 'rgba(92,84,74,.95)'; q.beginPath(); q.ellipse((x + bw / 2) * w, (y + bh / 2) * h, bw * w / 2, bh * h / 2, 0, 0, 7); q.fill(); }
+  g.filter = 'blur(5px)'; g.drawImage(f, 0, 0); g.filter = 'none';
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '255,245,225' : '20,15,10'},${Math.random() * 0.06})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
   return c;
 }
 export async function showCard(s) {
   shotId = 'card';
-  if (!masks) { try { masks = (await (await fetch('img/masks.json')).json()).ch01_01_group; } catch { masks = DEFAULT_MASKS; } }
-  const M = { ...DEFAULT_MASKS, ...masks };
-  const img = await loadImg('ch01_01_group');
+  const id = s.senka ? 'ch01_01_group_senka' : 'ch01_01_group';
+  if (!masks) { try { masks = await (await fetch('img/masks.json')).json(); } catch { masks = {}; } }
+  const M = { ...DEFAULT_MASKS[id], ...(masks[id] || {}) };
+  const img = await loadImg(id);
   const W = 1200, H = 1500;
-  const srcC = img || drawStandIn(W, H);
+  const srcC = img || drawStandIn(W, H, M);
   const sw = img ? img.naturalWidth : W, sh = img ? img.naturalHeight : H;
-  const cut = s.senka ? 0 : M.senka[0] + M.senka[2];           // без Сеньки кадр обрезан слева
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
-  const sx = cut * sw, sW = sw - sx;
-  const scale = Math.max(W / sW, H / sh), dw = sW * scale, dh = sh * scale, dx = (W - dw) / 2, dy = (H - dh) / 2;
-  g.drawImage(srcC, sx, 0, sW, sh, dx, dy, dw, dh);
-  const R = ([x, y, w, h]) => [dx + ((x - cut) / (1 - cut)) * dw, dy + y * dh, (w / (1 - cut)) * dw, h * dh];
-  if (s.moved) { // смаз: размытая копия фигуры со сдвигом
+  const scale = Math.max(W / sw, H / sh), dw = sw * scale, dh = sh * scale, dx = (W - dw) / 2, dy = (H - dh) / 2;
+  g.drawImage(srcC, 0, 0, sw, sh, dx, dy, dw, dh);
+  const R = ([x, y, w, h]) => [dx + x * dw, dy + y * dh, w * dw, h * dh];
+  if (s.moved && M.mitya) { // смаз: размытая копия фигуры со сдвигом
+    const snap = document.createElement('canvas'); snap.width = W; snap.height = H; snap.getContext('2d').drawImage(c, 0, 0);
     const [x, y, w, h] = R(M.mitya);
-    g.save(); g.beginPath(); g.rect(x - 12, y, w + 24, h); g.clip();
-    g.filter = 'blur(7px)'; g.globalAlpha = 0.85; g.drawImage(c, 0, 0); g.globalAlpha = 0.45;
-    g.drawImage(c, 9, 0); g.drawImage(c, -7, 1); g.restore();
+    g.save(); g.beginPath(); g.rect(x - 14, y, w + 28, h); g.clip();
+    g.filter = 'blur(7px)'; g.globalAlpha = 0.85; g.drawImage(snap, 0, 0); g.globalAlpha = 0.45;
+    g.drawImage(snap, 10, 0); g.drawImage(snap, -8, 1); g.restore();
   }
   for (const who of s.gone || []) { // ушедшие бледнеют
-    const [x, y, w, h] = R(M[who]); const gr = g.createLinearGradient(x, 0, x + w, 0);
-    gr.addColorStop(0, 'rgba(226,214,188,0)'); gr.addColorStop(0.2, 'rgba(226,214,188,.62)'); gr.addColorStop(0.8, 'rgba(226,214,188,.62)'); gr.addColorStop(1, 'rgba(226,214,188,0)');
-    g.fillStyle = gr; g.fillRect(x, y, w, h);
+    if (!M[who]) continue;
+    const [x, y, w, h] = R(M[who]); const cx = x + w / 2, cy = y + h / 2;
+    g.save(); g.translate(cx, cy); g.scale(w / h, 1);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, h * 0.62);
+    gr.addColorStop(0, 'rgba(226,214,188,.66)'); gr.addColorStop(0.7, 'rgba(226,214,188,.5)'); gr.addColorStop(1, 'rgba(226,214,188,0)');
+    g.fillStyle = gr; g.fillRect(-h, -h, h * 2, h * 2); g.restore();
   }
-  { const [x, y, w, h] = R(M.ribbon); g.save(); g.globalCompositeOperation = 'color'; g.fillStyle = 'rgba(190,30,22,.9)';
+  if (M.ribbon) { const [x, y, w, h] = R(M.ribbon); g.save(); g.globalCompositeOperation = 'color'; g.filter = 'blur(3px)'; g.fillStyle = 'rgba(150,24,18,.7)';
     g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 7); g.fill(); g.restore(); }
   const el = document.createElement('div'); el.className = 'shot card';
   el.innerHTML = '<div class="mount"></div>';
   const mount = el.firstChild; mount.append(c);
   const imp = document.createElement('div'); imp.className = 'imprint'; imp.textContent = 'Фотографія Н. И. Гринберга · Кіевъ, Подолъ'; mount.append(imp);
+  stage.classList.add('cardmode');
   swap(el);
 }
 
