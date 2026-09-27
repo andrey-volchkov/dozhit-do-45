@@ -109,7 +109,7 @@ export class Player {
       let done = false, tid;
       const pick = (i) => {
         if (done || i == null || i < 0) return; done = true;
-        clearTimeout(tid); this.choiceKeys = null;
+        clearTimeout(tid); if (this.timerCtl) this.timerCtl.stop(); this.timerCtl = null; this.choiceKeys = null;
         box.innerHTML = ''; fuse.classList.remove('on');
         const bar = fuse.firstElementChild; bar.style.transition = 'none'; bar.style.transform = 'none';
         S.clearText();
@@ -117,19 +117,39 @@ export class Player {
         resolve();
       };
       const visible = all.map((c, i) => ({ c, i })).filter((x) => x.i !== silent);
+      document.querySelectorAll('#text p').forEach((p) => p.classList.add('old'));
+      document.querySelectorAll('#text p:last-child').forEach((p) => p.classList.remove('old'));
       visible.forEach(({ c, i }, n) => {
         const b = document.createElement('button'); b.textContent = c.text; b.style.animationDelay = `${n * 0.18}s`;
         b.addEventListener('click', () => pick(i)); box.append(b);
       });
       this.choiceKeys = (n) => visible[n] && pick(visible[n].i);
       if (timer) {
+        // Таймер: тлеющая линия и тиканье. Меню ставит его на паузу (pauseTimer/resumeTimer).
         const bar = fuse.firstElementChild;
+        let left = timer * 1000, started = performance.now(), ticker = 0;
+        const run = () => {
+          started = performance.now();
+          bar.style.transition = `transform ${left / 1000}s linear`; bar.style.transform = 'scaleX(0)';
+          tid = setTimeout(() => pick(silent), left);
+          ticker = setInterval(() => A.sfx('tick'), left < 2500 ? 250 : 500);
+        };
+        const stop = () => { clearTimeout(tid); clearInterval(ticker); };
         bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; fuse.classList.add('on');
-        requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = `transform ${timer}s linear`; bar.style.transform = 'scaleX(0)'; }));
-        tid = setTimeout(() => pick(silent), timer * 1000);
+        requestAnimationFrame(() => requestAnimationFrame(run));
+        let paused = false;
+        this.timerCtl = {
+          pause: () => { if (paused) return; paused = true; stop(); left = Math.max(0, left - (performance.now() - started));
+            bar.style.transition = 'none'; bar.style.transform = `scaleX(${left / (timer * 1000)})`; },
+          resume: () => { if (!paused) return; paused = false; run(); },
+          stop,
+        };
       }
     });
   }
+
+  pauseTimer() { if (this.timerCtl) this.timerCtl.pause(); }
+  resumeTimer() { if (this.timerCtl) this.timerCtl.resume(); }
 
   cardState() {
     const v = this.story.variablesState;

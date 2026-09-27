@@ -120,6 +120,7 @@ const SFX = {
   steps(o) { for (let k = 0; k < 4; k++) { tone(o, { f: 80, v: 0.18, d: 0.07, t: k * 0.55 }); for (let i = 0; i < 6; i++) hit(o, { type: 'highpass', f: 3000, v: R(0.03, 0.08), d: 0.004, t: k * 0.55 + R(0, 0.12) }); } },
   type(o) { hit(o, { f: 3000, q: 1.5, v: 0.22, d: 0.004 }); tone(o, { f: 130, v: 0.08, d: 0.02 }); },
   bell(o) { tone(o, { f: 2600, v: 0.07, d: 1.1, verb: 0.2 }); tone(o, { f: 3900, v: 0.03, d: 0.8 }); },
+  tick(o) { hit(o, { f: 2900, q: 5, v: 0.09, d: 0.01 }); tone(o, { f: 1400, v: 0.02, d: 0.02 }); },
   seeds(o) { [0, 0.09, 0.9, 1.0, 2.1].forEach((t) => hit(o, { type: 'highpass', f: 2600, v: 0.12, d: 0.004, t })); },
   knock(o) { [0, 0.42, 0.84].forEach((t) => { tone(o, { f: 85, f2: 60, v: 0.5, d: 0.16, t }); hit(o, { type: 'lowpass', f: 700, v: 0.3, d: 0.05, t }); }); },
   flash(o) { swell(o, 0.25); for (let i = 0; i < 20; i++) crackle(o, 0.12); },

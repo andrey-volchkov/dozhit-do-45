@@ -26,9 +26,10 @@ function paintStart() {
   start.classList.remove('off'); start.hidden = false; menuBtn.hidden = true;
 }
 
+let player = null;
 async function begin(resume) {
   await A.initAudio();
-  const player = new Player(await storyJson);
+  player = new Player(await storyJson);
   if (resume) player.load(resume); else dropSave();
   player.onEnd = (ending) => {
     if (ending) put(ARCH, [...get(ARCH, []), ending]);
@@ -47,7 +48,10 @@ function paintMenu() {
   menu.querySelector('[data-act=sound]').textContent = `Звук: ${prefs.muted ? 'выкл' : 'вкл'}`;
   menu.querySelector('[data-act=motion]').textContent = `Движение: ${prefs.still ? 'выкл' : 'вкл'}`;
 }
-const toggleMenu = (on = menu.hidden) => { paintMenu(); menu.hidden = !on; };
+const toggleMenu = (on = menu.hidden) => {
+  paintMenu(); menu.hidden = !on;
+  if (player) on ? player.pauseTimer() : player.resumeTimer();
+};
 menuBtn.onclick = () => toggleMenu(true);
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && start.hidden) toggleMenu(); });
 menu.addEventListener('click', (e) => {
