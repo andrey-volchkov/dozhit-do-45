@@ -1,0 +1,136 @@
+/* «Выдержка»: экран — сцена, а не страница. */
+@font-face { font-family: 'Old Standard'; src: url(../fonts/old-standard-tt-cyrillic-400-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; font-display: swap; }
+@font-face { font-family: 'Old Standard'; src: url(../fonts/old-standard-tt-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; font-display: swap; }
+@font-face { font-family: 'Old Standard'; font-style: italic; src: url(../fonts/old-standard-tt-cyrillic-400-italic.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1; font-display: swap; }
+@font-face { font-family: 'Old Standard'; font-style: italic; src: url(../fonts/old-standard-tt-latin-400-italic.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; font-display: swap; }
+@font-face { font-family: 'Old Standard'; font-weight: 700; src: url(../fonts/old-standard-tt-cyrillic-700-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1; font-display: swap; }
+@font-face { font-family: 'PT Serif'; src: url(../fonts/pt-serif-cyrillic-400-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; font-display: swap; }
+@font-face { font-family: 'PT Serif'; src: url(../fonts/pt-serif-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; font-display: swap; }
+@font-face { font-family: 'PT Serif'; font-style: italic; src: url(../fonts/pt-serif-cyrillic-400-italic.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1; font-display: swap; }
+@font-face { font-family: 'PT Serif'; font-style: italic; src: url(../fonts/pt-serif-latin-400-italic.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; font-display: swap; }
+@font-face { font-family: 'PT Serif'; font-weight: 700; src: url(../fonts/pt-serif-cyrillic-700-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1; font-display: swap; }
+@font-face { font-family: 'PT Mono'; src: url(../fonts/pt-mono-cyrillic-400-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; font-display: swap; }
+@font-face { font-family: 'PT Mono'; src: url(../fonts/pt-mono-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; font-display: swap; }
+
+:root {
+  --bg: #000;
+  --ink: #e4ddcf;
+  --dim: rgba(228, 221, 207, .38);
+  --safelight: #b3241b;
+  --lilac: #b79ad6;
+  --paper: #e6dfcf;
+  --paper-ink: #1d1a16;
+  --serif: 'PT Serif', Georgia, serif;
+  --old: 'Old Standard', 'PT Serif', Georgia, serif;
+  --mono: 'PT Mono', 'Courier New', monospace;
+  --fs: clamp(17px, 1.05vw + 12px, 25px);
+  --gutter: max(16px, env(safe-area-inset-left));
+  --img-filter: grayscale(1) sepia(.42) contrast(1.06) brightness(.82);
+  --grain: .2;
+}
+.era-sound { --ink: #e2e2de; --img-filter: grayscale(1) contrast(1.12) brightness(.8); --grain: .15; }
+.era-newsreel { --ink: #e8e8e6; --img-filter: grayscale(1) contrast(1.32) brightness(.8); --grain: .26; }
+.era-document { --grain: .1; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); overflow: hidden; }
+body { font: var(--fs)/1.45 var(--serif); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible { outline: 1px solid var(--dim); outline-offset: 6px; }
+
+#stage { position: fixed; inset: 0; user-select: none; -webkit-user-select: none; cursor: default; }
+#stage > * { position: absolute; }
+
+/* Кадр */
+#frame { inset: 0; overflow: hidden; }
+#frame > .shot { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
+#frame > .shot.on { opacity: 1; }
+#frame img { width: 100%; height: 100%; object-fit: cover; filter: var(--img-filter); animation: kb 26s ease-out forwards, weave 4.2s steps(12) infinite; }
+@keyframes kb { from { transform: scale(1.001); } to { transform: scale(1.07); } }
+@keyframes weave { 0%,100% { translate: 0 0; } 25% { translate: .6px -.4px; } 50% { translate: -.3px .5px; } 75% { translate: .4px .3px; } }
+.era-silent #frame { animation: flicker 5s steps(40) infinite; }
+@keyframes flicker { 0%,100% { opacity: 1; } 11% { opacity: .95; } 12% { opacity: 1; } 47% { opacity: .97; } 48% { opacity: 1; } 83% { opacity: .94; } 84% { opacity: 1; } }
+#shade { inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,.55) 58%, rgba(0,0,0,.94) 100%); }
+
+/* Непроявленная пластина */
+.plate { background: radial-gradient(ellipse at 50% 45%, #2a2926 0%, #161614 60%, #0c0c0b 100%); }
+.plate::before { content: ''; position: absolute; inset: 6%; border: 1px solid rgba(228,221,207,.13); animation: develop 9s ease-out forwards; background: radial-gradient(ellipse at 50% 40%, rgba(228,221,207,.07), transparent 70%); }
+@keyframes develop { from { background-color: rgba(228,221,207,0); } to { background-color: rgba(228,221,207,.035); } }
+.plate .lbl { position: absolute; top: calc(6% + 12px); left: calc(6% + 14px); font: 12px/1 var(--mono); letter-spacing: .18em; color: rgba(228,221,207,.35); text-transform: uppercase; }
+.plate .cap { position: absolute; top: 20%; left: 14%; right: 14%; font: italic clamp(15px, 1vw + 10px, 20px)/1.45 var(--serif); color: rgba(228,221,207,.3); text-align: center; }
+
+/* Карточка 1905 года */
+.card { display: grid; place-items: center; background: #000; }
+.card .mount { background: linear-gradient(160deg, #d8cfbb, #bfb49c); padding: 2.2% 2.2% 0; box-shadow: 0 10px 50px rgba(0,0,0,.8); height: min(84%, 150vw); aspect-ratio: 4 / 5.6; display: flex; flex-direction: column; animation: kb 30s ease-out forwards; }
+.card canvas { width: 100%; aspect-ratio: 4 / 5; display: block; }
+.card .imprint { flex: 1; display: grid; place-items: center; font: italic clamp(10px, 1.2vh, 15px)/1.2 var(--old); color: #5b4f3a; letter-spacing: .06em; text-align: center; }
+
+/* Текст */
+#dock { left: 0; right: 0; bottom: calc(7vh + env(safe-area-inset-bottom)); margin: 0 auto; width: min(38em, calc(100% - 2 * var(--gutter))); display: flex; flex-direction: column; }
+#dock.center { bottom: auto; top: 50%; transform: translateY(-50%); }
+#text { pointer-events: none; }
+#text p { margin: .5em 0 0; opacity: 0; transform: translateY(.3em); transition: opacity .9s ease, transform .9s ease, color 1.2s ease; text-shadow: 0 1px 12px #000, 0 0 2px #000; }
+#text p.in { opacity: 1; transform: none; }
+#text p.old { color: var(--dim); }
+#text p.pov { font-style: italic; }
+#text p.close { font: 400 clamp(26px, 3vw + 12px, 54px)/1.2 var(--old); text-align: center; letter-spacing: .04em; }
+#text p.scrawl { font: italic 400 clamp(30px, 4vw + 12px, 72px)/1.1 var(--old); text-align: center; text-transform: uppercase; letter-spacing: .12em; color: rgba(236,236,236,.62); filter: blur(.7px); text-shadow: 0 0 18px rgba(255,255,255,.18), 0 3px 1px rgba(255,255,255,.08); }
+
+/* Выбор */
+#choices { display: flex; flex-direction: column; gap: .1em; margin-top: .9em; }
+#choices:empty { display: none; }
+#choices button { text-align: left; padding: .3em 0 .3em 1.1em; text-indent: -1.1em; opacity: 0; animation: rise .8s ease forwards; color: var(--ink); text-shadow: 0 1px 10px #000; }
+#choices button:hover, #choices button:focus-visible { text-decoration: underline; text-underline-offset: .25em; text-decoration-thickness: 1px; }
+@keyframes rise { from { opacity: 0; transform: translateY(.4em); } to { opacity: .92; transform: none; } }
+#fuse { height: 2px; margin-top: .6em; opacity: 0; transition: opacity .4s; }
+#fuse.on { opacity: 1; }
+#fuse i { display: block; height: 100%; width: 100%; background: linear-gradient(to right, rgba(228,221,207,.25), rgba(228,221,207,.25) calc(100% - 10px), var(--safelight)); box-shadow: 0 0 8px var(--safelight); transform-origin: left; }
+
+/* Межтитры */
+#title { inset: 0; display: grid; place-items: center; background: #000; z-index: 3; }
+#title .t { text-align: center; padding: 1.4em 2.2em; max-width: min(34em, calc(100% - 2 * var(--gutter))); animation: iris 1.4s ease-out both; }
+#title .small { display: block; font: 400 .72em/1.3 var(--old); letter-spacing: .32em; text-transform: uppercase; color: var(--dim); margin-bottom: .7em; }
+#title .big { display: block; font: 400 clamp(30px, 3.4vw + 12px, 64px)/1.15 var(--old); letter-spacing: .03em; }
+.era-silent #title .t { border: 1px solid rgba(228,221,207,.5); outline: 1px solid rgba(228,221,207,.22); outline-offset: 7px; }
+.era-sound #title .big, .era-newsreel #title .big { font-family: var(--serif); letter-spacing: .08em; text-transform: uppercase; font-size: clamp(22px, 2.2vw + 12px, 44px); }
+@keyframes iris { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(120% at 50% 50%); } }
+
+/* Документы */
+#doc { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(34em, calc(100% - 2 * var(--gutter))); max-height: 84vh; overflow: hidden; background: var(--paper); color: var(--paper-ink); font: clamp(13px, .6vw + 10px, 17px)/1.55 var(--mono); padding: 2.2em 2em; box-shadow: 0 20px 60px rgba(0,0,0,.9); z-index: 2; }
+#doc p { margin: 0 0 .5em; white-space: pre-wrap; }
+
+/* Плёнка */
+#grain { inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: overlay; opacity: var(--grain); z-index: 4; }
+#vignette { inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); z-index: 4; }
+#flash { inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 5; }
+#flash.go { animation: flash 1.8s ease-out; }
+@keyframes flash { 0% { opacity: 0; } 4% { opacity: 1; } 100% { opacity: 0; } }
+#stage.black > :not(#grain):not(#flash) { opacity: 0 !important; transition: opacity .8s ease; }
+
+/* Старт и меню */
+#start { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: var(--gutter); background: #000; z-index: 10; transition: opacity 1.4s ease; }
+#start.off { opacity: 0; pointer-events: none; }
+#start h1 { font: 400 clamp(44px, 7vw + 10px, 120px)/1 var(--old); letter-spacing: .08em; margin: 0 0 .25em; }
+#start .sub { font: .8em/1.4 var(--old); letter-spacing: .28em; text-transform: uppercase; color: var(--dim); margin: 0 0 2.6em; }
+#start nav { display: flex; flex-direction: column; gap: .7em; }
+#start nav button { letter-spacing: .06em; }
+#start nav button:hover { text-decoration: underline; text-underline-offset: .3em; text-decoration-thickness: 1px; }
+#start .hint { margin-top: 3em; font-size: .72em; color: var(--dim); font-style: italic; }
+#archive { list-style: none; padding: 0; margin: 1.5em 0 0; max-height: 30vh; overflow: auto; font: .7em/1.5 var(--mono); color: var(--dim); }
+#menu-btn { position: fixed; top: max(10px, env(safe-area-inset-top)); right: var(--gutter); z-index: 8; font-size: 22px; opacity: .22; transition: opacity .3s; padding: 6px; }
+#menu-btn:hover { opacity: .7; }
+#menu { position: fixed; inset: 0; z-index: 9; background: rgba(0,0,0,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1em; }
+[hidden] { display: none !important; }
+
+/* Телефон: кадр сверху, текст под ним */
+@media (max-aspect-ratio: 1/1) {
+  #frame { bottom: auto; height: min(58vh, 72vw); }
+  #frame .card { height: min(64vh, 110vw); }
+  #shade { background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) calc(min(58vh, 72vw) - 22vw), #000 min(58vh, 72vw)); }
+  #dock { bottom: calc(5vh + env(safe-area-inset-bottom)); }
+}
+
+.still #frame, .still #frame img, .still .card .mount, .still #title .t { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  #frame, #frame img, .card .mount, #title .t { animation: none !important; }
+}

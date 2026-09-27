@@ -1,0 +1,12 @@
+{
+  "name": "vyderzhka",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "walk": "node tools/walk.mjs"
+  },
+  "devDependencies": {
+    "inkjs": "^2.3.0"
+  }
+}
